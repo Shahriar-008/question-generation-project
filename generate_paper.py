@@ -20,26 +20,35 @@ def to_bengali_numeral(num_str):
     return bengali_str
 
 # --- Helper function (No changes, but I fixed a small bug in your prefixes) ---
-def add_question_to_document(document, q):
+def add_question_to_document(document, q, show_answer=False):
     """Adds a single formatted question to the document object."""
     
     OMR_CIRCLE = '◯'
+    FILLED_CIRCLE = '●'
     # I fixed this list, it previously contained incorrect characters
     bengali_prefixes = ['ক)', 'খ)', 'গ)', 'ঘ)'] 
 
     # A. Add Question Text
     p = document.add_paragraph()
-    p.add_run(f'{q["id"]}. {q["question_text"]}').bold = True
+    run = p.add_run(f'{q["id"]}. {q["question_text"]}')
+    run.bold = True
+    run.font.size = Pt(8)
 
     # B. Handle 'complex' questions
     if q["type"] == "complex":
         for sub_opt in q.get("sub_options", []):
-            document.add_paragraph(sub_opt, style='List Bullet')
+            p_sub = document.add_paragraph(sub_opt, style='List Bullet')
+            for run in p_sub.runs:
+                run.font.size = Pt(8)
         prompt_p = document.add_paragraph()
-        prompt_p.add_run(q.get("final_prompt", "নিচের কোনটি সঠিক?")).bold = True
+        run_prompt = prompt_p.add_run(q.get("final_prompt", "নিচের কোনটি সঠিক?"))
+        run_prompt.bold = True
+        run_prompt.font.size = Pt(8)
 
     # C. Add Answer Options (in a 2x2 table)
     options = q.get("answer_options", [])
+    correct_ans = str(q.get("correct_answer", "")).strip()
+
     if len(options) >= 4:
         opt_table = document.add_table(rows=2, cols=2)
         cell_data = [
@@ -51,18 +60,33 @@ def add_question_to_document(document, q):
         for c, option_text, prefix in cell_data:
             p = c.paragraphs[0]
             p.text = '' 
-            run_circle = p.add_run(OMR_CIRCLE)
-            run_circle.font.size = Pt(12)
+            
+            # Ensure strict boolean check and strip whitespace
+            is_correct = (show_answer is True) and (str(option_text).strip() == correct_ans)
+            current_circle = FILLED_CIRCLE if is_correct else OMR_CIRCLE
+
+            run_circle = p.add_run(current_circle)
+            run_circle.font.size = Pt(8)
             run_circle.font.name = 'Nirmala UI' 
+            
             run_text = p.add_run(f' {prefix} {option_text}')
-            run_text.font.size = Pt(10)
+            run_text.font.size = Pt(8)
             run_text.font.name = 'Nirmala UI'
+            
+            if is_correct:
+                run_text.bold = True
+                run_circle.bold = True
     else:
         for j, opt in enumerate(options):
-            document.add_paragraph(f'{bengali_prefixes[j]} {opt}')
+            is_correct = (show_answer is True) and (str(opt).strip() == correct_ans)
+            p = document.add_paragraph()
+            p.add_run(f'{bengali_prefixes[j]} {opt}')
+            if is_correct:
+                p.runs[0].bold = True
+                p.add_run(' (সঠিক উত্তর)').bold = True
 
 # --- Main function ---
-def create_question_paper(json_file_path, output_docx_path):
+def create_question_paper(json_file_path, output_docx_path, show_answer=False):
     """
     Generates a COMPACT two-column (snaking) MCQ paper
     with a FULL-WIDTH header.
@@ -109,10 +133,16 @@ def create_question_paper(json_file_path, output_docx_path):
     document.add_paragraph('বিষয়: ').alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     header_p = document.add_paragraph()
+    p_format = header_p.paragraph_format
+    tab_stops = p_format.tab_stops
+    tab_stops.clear_all()
+    tab_stops.add_tab_stop(
+        section.page_width - section.left_margin - section.right_margin,
+        WD_ALIGN_PARAGRAPH.RIGHT
+    )
     header_p.add_run(f'সময়— {bengali_time} মিনিট')
-    header_p.add_run('\t\t\t\t')
+    header_p.add_run('\t')
     header_p.add_run(f'পূর্ণমান— {bengali_marks}')
-    header_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     
     # --- 6. MODIFIED: Add NEW Section and set 2-Column Layout ---
     # Everything added AFTER this point will go into the new 2-column section
@@ -131,7 +161,7 @@ def create_question_paper(json_file_path, output_docx_path):
 
     # --- 7. Populate Questions (into the new 2-column section) ---
     for q in questions:
-        add_question_to_document(document, q)
+        add_question_to_document(document, q, show_answer=show_answer)
         
     # --- 8. Save the Document ---
     try:
@@ -150,6 +180,22 @@ if __name__ == "__main__":
     
     input_file = "questions.json"
     output_folder = "output"
-    output_file = os.path.join(output_folder, "Generated_Paper_Correct_Header.docx")
+    
+    # Clean up old file if it exists to avoid confusion
+    old_file = os.path.join(output_folder, "Generated_Paper_Correct_Header.docx")
+    if os.path.exists(old_file):
+        try:
+            os.remove(old_file)
+            print(f"Removed old file: {old_file}")
+        except OSError:
+            pass
 
-    create_question_paper(input_file, output_file)
+    # 1. Generate Student Copy (No Answers)
+    print("Generating Student Copy (No Answers)...")
+    output_file_student = os.path.join(output_folder, "Question_Paper.docx")
+    create_question_paper(input_file, output_file_student, show_answer=False)
+
+    # 2. Generate Teacher Copy (With Answers)
+    print("Generating Teacher Copy (With Answers)...")
+    output_file_teacher = os.path.join(output_folder, "Question_Paper_With_Answers.docx")
+    create_question_paper(input_file, output_file_teacher, show_answer=True)
