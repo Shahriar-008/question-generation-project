@@ -1,124 +1,110 @@
-**Question Generation Project**
+# Question Paper Generator
 
-- **Description:**: A small Python utility that generates a two-column, snaking MCQ paper (Microsoft Word `.docx`) from a JSON file of questions. The script `generate_paper.py` builds a full-width header, converts numeric values to Bengali numerals, and lays out options in a compact 2x2 answer grid with Bengali option prefixes and OMR-style circles.
+A Python utility to generate a two-column MCQ question paper in Microsoft Word (`.docx`) format from a simple `questions.json` file.
 
-- **Main script:**: `generate_paper.py`
+## Features
 
-**Features**
-- **Bengali numerals**: Converts numbers (time, total marks) to Bengali digits.
-- **Two-column layout**: Creates a continuous section with two columns and snaking question flow.
-- **Compact options**: Renders answer options in a 2x2 table with Bengali prefixes (`ক)`, `খ)`, `গ)`, `ঘ)`) and an OMR circle symbol.
-- **Complex questions**: Supports a `complex` question type which can include `sub_options` and a `final_prompt`.
+-   **Dual Document Output**: Generates two separate files:
+    -   `Question_Paper.docx`: A clean version for students.
+    -   `Question_Paper_With_Answers.docx`: A version for teachers with the correct answers marked.
+-   **Two-Column Layout**: Creates a professional, space-saving two-column layout for questions.
+-   **Customizable Formatting**:
+    -   Easily change the font size for questions and options (currently set to 8pt).
+    -   The header is formatted to align "Time" to the left and "Marks" to the right.
+-   **Bengali Numeral Conversion**: Automatically converts numbers for time and total marks into Bengali numerals.
+-   **Complex Questions**: Supports questions with multiple sub-options before the final prompt.
+-   **OMR-Style Options**: Answer choices are presented in a 2x2 grid with OMR-style circles (`◯`).
 
-**Requirements**
-- **Python version**: 3.8+ is recommended.
-- **Dependencies**: `python-docx` (for `.docx` creation).
+## Requirements
 
-**Installation (PowerShell)**
-**Question Generation Project**
+-   Python 3.8+
+-   Dependencies are listed in `requirements.txt`.
 
-- **Description:**: A small Python utility that generates a two-column, snaking MCQ paper (Microsoft Word `.docx`) from a JSON file of questions. The main script is `generate_paper.py`. The script writes a full-width header and creates a continuous two-column section for questions. Internally the script converts digit strings to Bengali numerals for display by default.
+## Installation
 
-- **Main script:**: `generate_paper.py`
+1.  **Clone the repository (optional):**
+    ```powershell
+    git clone https://github.com/Shahriar-008/question-generation-project.git
+    cd question-generation-project
+    ```
 
-**Features**
-- **Numeric conversion**: Converts numbers (time, total marks) to Bengali numerals inside the generated document (default behavior).
-- **Two-column layout**: Creates a continuous section with two columns and snaking question flow.
-- **Compact options**: Renders answer options in a 2x2 grid with option prefixes and an OMR-style circle symbol.
-- **Complex questions**: Supports a `complex` question type which can include `sub_options` and a `final_prompt`.
+2.  **Create and activate a virtual environment:**
+    ```powershell
+    # Use 'python' or 'py' depending on your system configuration
+    py -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    ```
 
-**Requirements**
-- **Python version**: 3.8+ is recommended.
-- **Dependencies**: See `requirements.txt` (the project currently requires `python-docx`).
+3.  **Install the required packages:**
+    ```powershell
+    pip install -r requirements.txt
+    ```
 
-**Installation (PowerShell)**
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-pip install python-docx
-```
+## Usage
 
-**Quick Usage**
-- **Input file**: `questions.json` (project root)
-- **Output folder**: `output/`
-**Question Generation Project**
+Simply run the main script from your terminal:
 
-- **Description:** A small Python utility that generates a two-column, snaking MCQ paper (Microsoft Word `.docx`) from a JSON file of questions. The main script is `generate_paper.py`. The script writes a full-width header and creates a continuous two-column section for questions. By default, numeric strings in the header are converted to Bengali numerals for display.
-
-- **Main script:** `generate_paper.py`
-
-**Features**
-- **Numeric conversion**: Converts numbers (time, total marks) to Bengali numerals inside the generated document (default behavior).
-- **Two-column layout**: Creates a continuous section with two columns and snaking question flow.
-- **Compact options**: Renders answer options in a 2x2 grid with option prefixes and an OMR-style circle symbol.
-- **Complex questions**: Supports a `complex` question type which can include `sub_options` and a `final_prompt`.
-
-**Requirements**
-- **Python version**: 3.8+ is recommended.
-- **Dependencies**: See `requirements.txt` (the project currently requires `python-docx`).
-
-**Installation (PowerShell)**
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
-
-**Quick Usage**
-- **Input file**: `questions.json` (project root)
-- **Output folder**: `output/`
-- **Run**:
 ```powershell
 python generate_paper.py
 ```
-By default the script reads `questions.json` in the repository root and writes the output to `output/Generated_Paper_Correct_Header.docx` (see the `__main__` block in `generate_paper.py` for defaults).
 
-**JSON format (example — English only)**
-The input JSON should be an array of question objects. Each question object supports these fields:
+The script will read the questions from `questions.json` and generate the Word documents in the `output/` directory.
 
-- `id` (number): Question ID displayed before the text.
-- `question_text` (string): The question content.
-- `type` (string): `mcq` or `complex`.
-- `answer_options` (array of strings): Up to four options are rendered in a 2x2 grid.
-- `sub_options` (array of strings, optional): Used when `type` is `complex` to list sub-statements.
-- `final_prompt` (string, optional): Prompt shown after `sub_options` for `complex` questions.
+## Output
 
-Example JSON:
+The script will produce two files in the `output/` folder:
+
+1.  `Question_Paper.docx`: The question paper for students.
+2.  `Question_Paper_With_Answers.docx`: The question paper with correct answers highlighted.
+
+## JSON Format
+
+The `questions.json` file should be an array of question objects. Each object has the following structure:
+
+-   `id` (string): The question number.
+-   `question_text` (string): The main text of the question.
+-   `type` (string): Can be `simple` or `complex`.
+-   `answer_options` (array of strings): The list of possible answers.
+-   `correct_answer` (string): The exact text of the correct answer from the `answer_options`.
+-   `sub_options` (array of strings, for `complex` type): A list of statements or sub-questions.
+-   `final_prompt` (string, for `complex` type): The final question asked after the sub-options.
+
+### Example:
+
 ```json
-[  
+[
   {
-    "id": 1,
+    "id": "1",
     "question_text": "What is the capital of France?",
-    "type": "mcq",
-    "answer_options": ["Paris", "London", "Berlin", "Rome"]
+    "type": "simple",
+    "answer_options": [
+      "London",
+      "Paris",
+      "Berlin",
+      "Rome"
+    ],
+    "correct_answer": "Paris"
   },
   {
-    "id": 2,
-    "question_text": "Which statement is correct?",
+    "id": "2",
+    "question_text": "Consider the following statements:",
     "type": "complex",
-    "sub_options": ["Statement A: The Earth orbits the Sun.", "Statement B: The Sun orbits the Earth."],
-    "final_prompt": "Which statement is correct?",
-    "answer_options": ["Only A", "Only B", "Both", "Neither"]
+    "sub_options": [
+      "i. The Earth is flat.",
+      "ii. The sun revolves around the Earth."
+    ],
+    "final_prompt": "Which of the above statements is correct?",
+    "answer_options": [
+      "i only",
+      "ii only",
+      "Both i and ii",
+      "Neither i nor ii"
+    ],
+    "correct_answer": "Neither i nor ii"
   }
 ]
 ```
 
-**Output**
-- The script writes a `.docx` file with a full-width header and the remainder in a continuous two-column section. Default output path: `output/Generated_Paper_Correct_Header.docx`.
+## License
 
-**Notes & Tips**
-- **Font**: The script sets the default font to `Nirmala UI` in `generate_paper.py`. For English-only papers you can choose a different font by editing the `style.font.name` line.
-- **Numeric display**: The script converts digit strings to Bengali numerals for display. If you prefer to keep Arabic numerals, modify or remove the `to_bengali_numeral` usage in the header generation code.
-- **File paths**: To change input or output paths, edit the `input_file` / `output_file` variables in the `__main__` block or call `create_question_paper()` from another script.
-- **Layout tweaks**: Column count and spacing are defined in the section `w:cols` settings; adjust `w:num` and `w:space` in `generate_paper.py`.
-
-**License**
-- This repository is licensed under the MIT License — see the `LICENSE` file in the repository root.
-
-**Contributing**
-- Issues and pull requests are welcome. For non-trivial changes, please open an issue to discuss the design before submitting a PR.
-
-**Contact**
-- Author: `Shahriar-008` (GitHub)
+This project is licensed under the MIT License. See the `LICENSE` file for details.
